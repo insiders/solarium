@@ -41,6 +41,7 @@ namespace Solarium\QueryType\Update;
 use Solarium\Client;
 use Solarium\Core\Client\Request;
 use Solarium\QueryType\Update\Query\Query as UpdateQuery;
+use Solarium\QueryType\Update\Query\Document\Document;
 use Solarium\Core\Query\RequestBuilder as BaseRequestBuilder;
 use Solarium\Core\Query\QueryInterface;
 use Solarium\Exception\RuntimeException;
@@ -119,31 +120,49 @@ class RequestBuilder extends BaseRequestBuilder
         $xml .= '>';
 
         foreach ($command->getDocuments() as $doc) {
-            $xml .= '<doc';
-            $xml .= $this->attrib('boost', $doc->getBoost());
-            $xml .= '>';
-
-            foreach ($doc->getFields() as $name => $value) {
-                $boost = $doc->getFieldBoost($name);
-                $modifier = $doc->getFieldModifier($name);
-                if (is_array($value)) {
-                    foreach ($value as $multival) {
-                        $xml .= $this->buildFieldXml($name, $boost, $multival, $modifier, $query);
-                    }
-                } else {
-                    $xml .= $this->buildFieldXml($name, $boost, $value, $modifier, $query);
-                }
-            }
-
-            $version = $doc->getVersion();
-            if ($version !== null) {
-                $xml .= $this->buildFieldXml('_version_', null, $version);
-            }
-
-            $xml .= '</doc>';
+            $xml .= $this->buildDocumentXml($doc, $query);
         }
 
         $xml .= '</add>';
+
+        return $xml;
+    }
+
+    /**
+     * @param  Document    $doc
+     * @param  UpdateQuery $query
+     * @return string
+     */
+    protected function buildDocumentXml(Document $doc, UpdateQuery $query = null)
+    {
+        $xml = '<doc';
+        $xml .= $this->attrib('boost', $doc->getBoost());
+        $xml .= '>';
+
+        foreach ($doc->getFields() as $name => $value) {
+            $boost = $doc->getFieldBoost($name);
+            $modifier = $doc->getFieldModifier($name);
+            if (is_array($value)) {
+                foreach ($value as $multival) {
+                    if ($multival instanceof Document) {
+                        $xml .= $this->buildDocumentXml($multival, $query);
+                    } else {
+                        $xml .= $this->buildFieldXml($name, $boost, $multival, $modifier, $query);
+                    }
+                }
+            } elseif ($value instanceof Document) {
+                $xml .= $this->buildDocumentXml($value, $query);
+            } else {
+                $xml .= $this->buildFieldXml($name, $boost, $value, $modifier, $query);
+            }
+        }
+
+        $version = $doc->getVersion();
+        if ($version !== null) {
+            $xml .= $this->buildFieldXml('_version_', null, $version);
+        }
+
+        $xml .= '</doc>';
 
         return $xml;
     }
