@@ -30,63 +30,43 @@
  *
  * @copyright Copyright 2011 Bas de Nooijer <solarium@raspberry.nl>
  * @license http://github.com/basdenooijer/solarium/raw/master/COPYING
+ *
  * @link http://www.solarium-project.org/
  */
 
 /**
  * @namespace
  */
+
 namespace Solarium\QueryType\Select\Query\Component\Facet;
 
 use Solarium\Core\Configurable;
 
 /**
- * Facet base class
+ * Facet base class.
  *
  * @link http://wiki.apache.org/solr/SimpleFacetParameters
  */
-abstract class Facet extends Configurable
+abstract class AbstractFacet extends Configurable
 {
     /**
-     * Exclude tags for this facet
+     * Exclude tags for this facet.
      *
      * @var array
      */
     protected $excludes = array();
 
     /**
-     * Must be implemented by the facet types and return one of the constants
+     * Must be implemented by the facet types and return one of the constants.
      *
      * @abstract
+     *
      * @return string
      */
     abstract public function getType();
 
     /**
-     * Initialize options
-     *
-     * @return void
-     */
-    protected function init()
-    {
-        foreach ($this->options as $name => $value) {
-            switch ($name) {
-                case 'key':
-                    $this->setKey($value);
-                    break;
-                case 'exclude':
-                    if (!is_array($value)) {
-                        $value = array($value);
-                    }
-                    $this->setExcludes($value);
-                    unset($this->options['exclude']);
-                    break;
-            }
-        }
-    }
-
-    /**
-     * Get key value
+     * Get key value.
      *
      * @return string
      */
@@ -96,10 +76,11 @@ abstract class Facet extends Configurable
     }
 
     /**
-     * Set key value
+     * Set key value.
      *
-     * @param  string $value
-     * @return self   Provides fluent interface
+     * @param string $value
+     *
+     * @return self Provides fluent interface
      */
     public function setKey($value)
     {
@@ -107,10 +88,11 @@ abstract class Facet extends Configurable
     }
 
     /**
-     * Add an exclude tag
+     * Add an exclude tag.
      *
-     * @param  string $tag
-     * @return self   Provides fluent interface
+     * @param string $tag
+     *
+     * @return self Provides fluent interface
      */
     public function addExclude($tag)
     {
@@ -120,10 +102,11 @@ abstract class Facet extends Configurable
     }
 
     /**
-     * Add multiple exclude tags
+     * Add multiple exclude tags.
      *
-     * @param  array $excludes
-     * @return self  Provides fluent interface
+     * @param array $excludes
+     *
+     * @return self Provides fluent interface
      */
     public function addExcludes(array $excludes)
     {
@@ -135,7 +118,7 @@ abstract class Facet extends Configurable
     }
 
     /**
-     * Get all excludes
+     * Get all excludes.
      *
      * @return array
      */
@@ -145,10 +128,11 @@ abstract class Facet extends Configurable
     }
 
     /**
-     * Remove a single exclude tag
+     * Remove a single exclude tag.
      *
-     * @param  string $exclude
-     * @return self   Provides fluent interface
+     * @param string $exclude
+     *
+     * @return self Provides fluent interface
      */
     public function removeExclude($exclude)
     {
@@ -160,7 +144,7 @@ abstract class Facet extends Configurable
     }
 
     /**
-     * Remove all excludes
+     * Remove all excludes.
      *
      * @return self Provides fluent interface
      */
@@ -172,7 +156,7 @@ abstract class Facet extends Configurable
     }
 
     /**
-     * Set multiple excludes
+     * Set multiple excludes.
      *
      * This overwrites any existing excludes
      *
@@ -182,5 +166,26 @@ abstract class Facet extends Configurable
     {
         $this->clearExcludes();
         $this->addExcludes($excludes);
+    }
+
+    /**
+     * Initialize options.
+     */
+    protected function init()
+    {
+        foreach ($this->options as $name => $value) {
+            switch ($name) {
+                case 'key':
+                    $this->setKey($value);
+                    break;
+                case 'exclude':
+                    if (!is_array($value)) {
+                        $value = explode(',', $value);
+                    }
+                    $this->setExcludes($value);
+                    unset($this->options['exclude']);
+                    break;
+            }
+        }
     }
 }
